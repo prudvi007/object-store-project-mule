@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:batch="http://www.mulesoft.org/schema/mule/batch"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/batch http://www.mulesoft.org/schema/mule/batch/current/mule-batch.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="7f36c457-a3dd-4d72-b4a8-cc21133d25fa" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<db:config name="Database_Config" doc:name="Database Config" doc:id="37771cda-f2b8-4379-8286-a511238e2027" >
+		<db:my-sql-connection host="localhost" port="3306" user="root" password="root" database="db123" />
+	</db:config>
+	<flow name="batchFlow" doc:id="140a12fe-7756-4724-a02b-df3d2544bf1e" >
+		<http:listener doc:name="Listener" doc:id="b229d20e-4470-471f-a4ce-0920ddeb1ec7" config-ref="HTTP_Listener_config" path="/batch"/>
+		<ee:transform doc:name="Transform Message" doc:id="2c8491ef-e8a4-40ac-9267-2c7b8d724c2f" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+1 to 100 map{
+	id: 200 + $$,
+	name: "mule",
+	number: 98765432,
+	lname: "soft"
+}
+]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<batch:job jobName="batchBatch_Job" doc:id="dcc970d5-63db-4571-8b3e-c0ccd4b16c60" >
+			<batch:process-records >
+				<batch:step name="Batch_Step" doc:id="a57393fe-2fd0-4741-a974-02b86f81fba1">
+					<batch:aggregator doc:name="Batch Aggregator" doc:id="967c1466-60c6-49ea-aaf8-549d0ac461d4" size="50">
+						<logger level="INFO" doc:name="Logger" doc:id="fc25552b-0aae-4a4a-8bc7-83947561b4d5" message="#[payload]"/>
+						<db:bulk-insert doc:name="Bulk insert" doc:id="21d33922-cfbc-4009-97eb-a61f68d9fca1" config-ref="Database_Config">
+							<db:sql ><![CDATA[INSERT INTO NEW_TABLE (id ,name , number ,lname)
+VALUES(:id ,:name, :number ,:lname);]]></db:sql>
+						</db:bulk-insert>
+					</batch:aggregator>
+				</batch:step>
+			</batch:process-records>
+			<batch:on-complete >
+				<ee:transform doc:name="Transform Message" doc:id="95f894c8-6890-46ea-bfd9-89875907d17c" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+
+payload]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+				<logger level="INFO" doc:name="Logger" doc:id="3cc27f98-0add-4362-9847-40f4daf2faee" message="#[payload]"/>
+			</batch:on-complete>
+		</batch:job>
+		<logger level="INFO" doc:name="Logger" doc:id="d5be4ddb-4bad-4cb1-8d1b-2459fd1875ac" message='#["END OF THE FLOW"]'/>
+	</flow>
+</mule>

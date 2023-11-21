@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="b0fd16f2-e0ed-45a7-92b4-601397cae193" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<db:config name="Database_Config" doc:name="Database Config" doc:id="ffd97bee-06ef-4407-b269-8ea119d13fc2" >
+		<db:my-sql-connection host="localhost" port="3306" user="root" password="root" database="newdb" />
+	</db:config>
+	<flow name="db-sampleFlow" doc:id="c65777ac-7a42-483e-8ec3-1ed9058122f4" >
+		<http:listener doc:name="Listener" doc:id="a2c34abc-7d73-4754-bfb1-bd5c9fd027a4" config-ref="HTTP_Listener_config" path="/db"/>
+		<logger level="INFO" doc:name="Logger" doc:id="52ddb241-390b-4adc-b4f4-11a0113b0402" message='#["flow started"]'/>
+		<db:select doc:name="Select" doc:id="a01f7d2e-ac51-46b3-b57e-8256f25d9255" config-ref="Database_Config">
+			<db:sql ><![CDATA[select *from newdb.hello;]]></db:sql>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="e3d67b6d-c5c5-4b3f-a5f7-bb535468cbb9" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+</mule>
