@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:os="http://www.mulesoft.org/schema/mule/os" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/os http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="c9bf5ab1-1886-4734-903f-0b461b9efb85" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<os:object-store name="Object_store" doc:name="Object store" doc:id="f07b4f69-68dc-4c46-9bf3-6a1a6dd830cd" />
+	<flow name="STORE" doc:id="2034d708-bcc3-4e78-beff-c02e054840a2" >
+		<http:listener doc:name="Listener" doc:id="6be69581-7ec2-4e33-a118-1e1e3b7fdc0c" config-ref="HTTP_Listener_config" path="/store"/>
+		<logger level="INFO" doc:name="Logger" doc:id="f2430067-88e1-4d1c-be98-ff968d751b3d" message='#["STARTED THE FLOW"]'/>
+		<os:store doc:name="Store" doc:id="8d9b8ecf-2578-4c3c-a3b7-3fed0ba51936" key="#[attributes.queryParams.key]" objectStore="Object_store">
+			<os:value ><![CDATA[#[attributes.queryParams.value]]]></os:value>
+		</os:store>
+		<logger level="INFO" doc:name="Logger" doc:id="42fd39fa-b2e0-4149-87c1-dee469295313" message='#["end of the main flow"]'/>
+	</flow>
+	<flow name="RETRIEVE" doc:id="e3c3fd88-b0c8-4073-b0bc-9f4d8fe6c546" >
+		<http:listener doc:name="Listener" doc:id="1798682d-4985-44d3-b60c-be2a5e871720" config-ref="HTTP_Listener_config" path="/retrieve"/>
+		<os:retrieve doc:name="Retrieve" doc:id="ae44e6a1-ddb3-41a6-9604-603ae1ad066a" key="#[attributes.queryParams.name]" objectStore="Object_store">
+			<os:default-value ><![CDATA[#["try again"]]]></os:default-value>
+		</os:retrieve>
+	</flow>
+	<flow name="RETRIEVE-ALL" doc:id="f5a6b26b-fd20-40e6-866a-9c2311c332f7" >
+		<http:listener doc:name="Listener" doc:id="c565428f-5b8d-49dc-8b0b-9dc2841f8dfb" config-ref="HTTP_Listener_config" path="/retrieve-all"/>
+		<os:retrieve-all doc:name="Retrieve all" doc:id="50bf6fba-46bd-4b84-8898-a42290d6e6fd" objectStore="Object_store"/>
+	</flow>
+	<flow name="RETRIEVE-ALL-KEYS" doc:id="ecc27d4a-8568-4ccd-bcdd-d4433453d2dd" >
+		<http:listener doc:name="Listener" doc:id="403f5265-fe79-400e-8238-7b9196f8128f" config-ref="HTTP_Listener_config" path="/retrieve-all-keys"/>
+		<os:retrieve-all-keys doc:name="Retrieve all keys" doc:id="ea2021db-18fa-4a2f-9d2f-2d23d38cc84d" objectStore="Object_store"/>
+	</flow>
+	<flow name="CONTAINS" doc:id="c2ce58e0-8998-4c79-aadc-333e78f30dc4" >
+		<http:listener doc:name="Listener" doc:id="f182af74-4839-44a0-8296-8aa1dea499cf" config-ref="HTTP_Listener_config" path="/contains"/>
+		<os:contains doc:name="Contains" doc:id="195e2415-4b7f-48ff-aae2-66941f2cfd2e" key="#[attributes.queryParams.id]" objectStore="Object_store"/>
+	</flow>
+	<flow name="REMOVE" doc:id="233c87db-a8d7-476b-a2b5-6c6cf583c9a8" >
+		<http:listener doc:name="Listener" doc:id="726f16a0-4ae7-4f19-aa17-c14edf42a2f6" config-ref="HTTP_Listener_config" path="/remove"/>
+		<os:remove doc:name="Remove" doc:id="c8525604-8a7a-46e0-b4c2-868f2b58baa3" key="#[attributes.queryParams.id]" objectStore="Object_store"/>
+	</flow>
+	<flow name="CLEAR" doc:id="fa7483b1-8a66-4659-8ee2-b3b9851e409f" >
+		<http:listener doc:name="Listener" doc:id="42a0e629-7de0-4a74-9af0-d71e2fcc1adb" config-ref="HTTP_Listener_config" path="/clear"/>
+		<os:clear doc:name="Clear" doc:id="c34fb066-4b56-4590-a43e-5ddcd4271e6a" objectStore="Object_store"/>
+	</flow>
+</mule>
